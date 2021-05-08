@@ -28,11 +28,19 @@ proctype CentralBank(){
     int bankOfAmericaBalance = 0;
     int wellsFargoBalance = 0;
     int creditAmount;
+    int debitAmount;
+
     do 
     :: bankOfAmericaCentralBank ? CREDIT(creditAmount) -> 
         printf("Central Bank: Bank of America is crediting WellsFargo %d\n", creditAmount);
         printf("Central Bank: WellsFargo original balance: %d\n", wellsFargoBalance);
         wellsFargoBalance = wellsFargoBalance + creditAmount;
+        printf("Central Bank: WellsFargo new balance: %d\n", wellsFargoBalance);
+    
+    :: wellsFargoCentralBank ? DEBIT(debitAmount) ->
+        printf("Central Bank: Wells Fargo its account for %d\n", debitAmount);
+        printf("Central Bank: Wells Fargo original balance: %d\n", wellsFargoBalance);
+        wellsFargoBalance = wellsFargoBalance - debitAmount;
         printf("Central Bank: WellsFargo new balance: %d\n", wellsFargoBalance);
     od
 }
@@ -44,6 +52,9 @@ proctype WellsFargo(){
     :: interBank ? CREDIT(creditAmount) -> 
         printf("WellsFargo: Bank of America wants to Credit Bob's account.\n");
         printf("WellsFargo: Bob's original balance %d.\n", bobsBalance);
+        wellsFargoCentralBank ! DEBIT, creditAmount;
+        bobsBalance = bobsBalance + creditAmount;
+        printf("WellsFargo: Bob's new balance: %d\n", bobsBalance);
     od
 
 }

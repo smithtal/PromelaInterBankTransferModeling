@@ -2,6 +2,8 @@ mtype {CREDIT, DEBIT, TRANSFER};
 
 chan bankOfAmericaCustomer = [2] of { mtype, int };
 chan bankOfAmericaCentralBank = [2] of {mtype, int };
+chan wellsFargoCentralBank = [2] of { mtype, int };
+chan interBank = [2] of { mtype, int };
 
 proctype Alice(){
     bankOfAmericaCustomer ! TRANSFER, 100;
@@ -18,6 +20,7 @@ proctype BankOfAmerica(){
         alicesBalance = alicesBalance - transferAmount;
         printf("Bank of America: Alices new balance is %d \n.", alicesBalance);
         bankOfAmericaCentralBank ! CREDIT, transferAmount; 
+        interBank ! CREDIT, transferAmount;
     od
 }
 
@@ -28,15 +31,26 @@ proctype CentralBank(){
     do 
     :: bankOfAmericaCentralBank ? CREDIT(creditAmount) -> 
         printf("Central Bank: Bank of America is crediting WellsFargo %d\n", creditAmount);
-        printf("WellsFargo original balance: %d\n", wellsFargoBalance);
+        printf("Central Bank: WellsFargo original balance: %d\n", wellsFargoBalance);
         wellsFargoBalance = wellsFargoBalance + creditAmount;
-        printf("WellsFargo new balance: %d\n", wellsFargoBalance);
+        printf("Central Bank: WellsFargo new balance: %d\n", wellsFargoBalance);
     od
 }
 
+proctype WellsFargo(){
+    int bobsBalance = 0;
+    int creditAmount = 0;
+    do
+    :: interBank ? CREDIT(creditAmount) -> 
+        printf("WellsFargo: Bank of America wants to Credit Bob's account.\n");
+        printf("WellsFargo: Bob's original balance %d.\n", bobsBalance);
+    od
+
+}
 
 init {
     run Alice();
     run BankOfAmerica();
     run CentralBank();
+    run WellsFargo();
 }

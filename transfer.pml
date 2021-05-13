@@ -1,4 +1,4 @@
-mtype {CREDIT, DEBIT, TRANSFER};
+mtype {ACK, CREDIT, DEBIT, TRANSFER};
 
 chan bankOfAmericaCustomer = [2] of { mtype, int };
 chan bankOfAmericaCentralBank = [2] of {mtype, int };
@@ -17,10 +17,13 @@ proctype BankOfAmerica(){
     :: bankOfAmericaCustomer ? TRANSFER, transferAmount ->
         printf("Bank of America: Received Alices' request.\n");
         printf("Bank of America: Alices' current balance is %d \n.", alicesBalance);
-        alicesBalance = alicesBalance - transferAmount;
         printf("Bank of America: Alices new balance is %d \n.", alicesBalance);
         bankOfAmericaCentralBank ! CREDIT, transferAmount; 
-        interBank ! CREDIT, transferAmount;
+
+        bankOfAmericaCentralBank ? ACK(transferAmount) ->
+            printf("Bank of America: Received acknowledgement from Central Bank.")
+            alicesBalance = alicesBalance - transferAmount;
+            interBank ! CREDIT, transferAmount;
     od
 }
 
@@ -34,6 +37,7 @@ proctype CentralBank(){
     :: bankOfAmericaCentralBank ? CREDIT(creditAmount) -> 
         printf("Central Bank: Bank of America is crediting WellsFargo %d\n", creditAmount);
         printf("Central Bank: WellsFargo original balance: %d\n", wellsFargoBalance);
+        bankOfAmericaCentralBank ! ACK, creditAmount;
         wellsFargoBalance = wellsFargoBalance + creditAmount;
         printf("Central Bank: WellsFargo new balance: %d\n", wellsFargoBalance);
     

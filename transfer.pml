@@ -21,9 +21,12 @@ proctype BankOfAmerica(){
         bankOfAmericaCentralBank ! CREDIT, transferAmount; 
 
         bankOfAmericaCentralBank ? ACK(transferAmount) ->
-            printf("Bank of America: Received acknowledgement from Central Bank.")
+            printf("Bank of America: Received acknowledgement from Central Bank.");
             alicesBalance = alicesBalance - transferAmount;
+
             interBank ! CREDIT, transferAmount;
+            interBank ? ACK(transferAmount) ->
+                printf("Wells Fargo acknowledged the receipt of the message.");
     od
 }
 
@@ -35,11 +38,15 @@ proctype CentralBank(){
 
     do 
     :: bankOfAmericaCentralBank ? CREDIT(creditAmount) -> 
-        printf("Central Bank: Bank of America is crediting WellsFargo %d\n", creditAmount);
-        printf("Central Bank: WellsFargo original balance: %d\n", wellsFargoBalance);
-        bankOfAmericaCentralBank ! ACK, creditAmount;
-        wellsFargoBalance = wellsFargoBalance + creditAmount;
-        printf("Central Bank: WellsFargo new balance: %d\n", wellsFargoBalance);
+        if
+        ::  printf("Central Bank: Bank of America is crediting WellsFargo %d\n", creditAmount);
+            printf("Central Bank: WellsFargo original balance: %d\n", wellsFargoBalance);
+            bankOfAmericaCentralBank ! ACK, creditAmount;
+            wellsFargoBalance = wellsFargoBalance + creditAmount;
+            printf("Central Bank: WellsFargo new balance: %d\n", wellsFargoBalance);
+        
+        ::  printf("Central Bank: Message lossed.\n");
+        fi
     
     :: wellsFargoCentralBank ? DEBIT(debitAmount) ->
         printf("Central Bank: Wells Fargo its account for %d\n", debitAmount);
@@ -54,6 +61,7 @@ proctype WellsFargo(){
     int creditAmount = 0;
     do
     :: interBank ? CREDIT(creditAmount) -> 
+        interBank ! ACK, creditAmount;
         printf("WellsFargo: Bank of America wants to Credit Bob's account.\n");
         printf("WellsFargo: Bob's original balance %d.\n", bobsBalance);
         wellsFargoCentralBank ! DEBIT, creditAmount;

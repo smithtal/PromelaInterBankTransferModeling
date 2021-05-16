@@ -20,10 +20,6 @@
 
 // msgtype, msgfrom, sender, fund
 chan Proc[MAX_PROCESS] = [20] of {byte, byte, byte, int};
-//chan Bank[MAX_BANK] = [20] of {byte, byte, int};
-//chan User[MAX_PROCESS - MAX_BANK] = [20] of {byte, byte, int};
-//byte Balances[MAX_PROCESS - MAX_BANK] = 500; // stores current balance of each customers
-//byte Banks[MAX_PROCESS - MAX_BANK]; // stores the type of bank customers are having
 
 typedef Customer {
     int balance = 500;
@@ -52,17 +48,6 @@ proctype Transaction(byte current_p) {
     int i;
 
     printf("current proc is %d\n", current_p);
-
-    /* if
-    // if current process is not user, initialize the variables
-    :: (current_p < MAX_BANK) ->
-        int chase_bal = 0;
-        int citi_bal = 0;
-        int fund = 200;
-        //int bank;
-        bool complete[MAX_PROCESS - MAX_BANK];
-    :: else -> skip;
-    fi; */
 
     msgtype = MSG_NULL;
 
@@ -212,6 +197,7 @@ proctype Transaction(byte current_p) {
 
         :: (msgtype == MSG_RECEIVED) ->
             i = 0;
+            int h;
             do
             :: (i < MAX_PROCESS - MAX_BANK) ->
                 if
@@ -229,10 +215,10 @@ proctype Transaction(byte current_p) {
 init{
     int p;
     p = MAX_PROCESS - 1;
-    
+    run BankType(MAX_PROCESS - MAX_BANK);
     do
     :: (p >= 0) -> 
-        run BankType(MAX_PROCESS - MAX_BANK);
+        /* run BankType(MAX_PROCESS - MAX_BANK); */
         run Transaction(p); 
         p = p - 1;
     :: (p < 0) -> break;

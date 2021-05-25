@@ -123,11 +123,13 @@ proctype Transaction(byte current_p) {
                 customers[msgfrom - MAX_BANK].balance = customers[msgfrom - MAX_BANK].balance - msgdata;
                 int receiver = customers[msgfrom - MAX_BANK].receiver;
 
+                Proc[msgfrom] ! MSG_ACCEPT(current_p, sender, msgdata); // send accept msg to sender
+
                 if
                 // if same bank
                 :: (customers[msgfrom - MAX_BANK].bank == customers[receiver - MAX_BANK].bank) ->
                     customers[receiver - MAX_BANK].balance = customers[receiver - MAX_BANK].balance + msgdata;
-                    Proc[msgfrom] ! MSG_FINISHED(current_p, msgfrom, msgdata);
+                    Proc[receiver] ! MSG_FINISHED(current_p, sender, msgdata);
                     printf("$%d is transferred from Proc %d to Proc %d at %d\n",
                         msgdata, msgfrom, receiver, customers[msgfrom - MAX_BANK].bank);
 
@@ -146,10 +148,8 @@ proctype Transaction(byte current_p) {
                         printf("Proc %d to Proc %d: $%d is added to citi account\n",
                             msgfrom, receiver, msgdata);
                     fi;
+                    Proc[PROC_CENTRAL] ! MSG_TRANSFER(msgfrom, msgfrom, msgdata); // send transfer msg to central bank
                 fi;
-
-                Proc[msgfrom] ! MSG_ACCEPT(current_p, sender, msgdata); // send accept msg to sender
-                Proc[PROC_CENTRAL] ! MSG_TRANSFER(msgfrom, msgfrom, msgdata); // send transfer msg to central bank
 
             :: (customers[msgfrom - MAX_BANK].balance < msgdata) ->
                 Proc[msgfrom] ! MSG_DECLINE(current_p, msgfrom, msgdata);

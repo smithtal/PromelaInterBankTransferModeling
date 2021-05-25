@@ -6,7 +6,7 @@
 #define PROC_CENTRAL 2
 
 #define MAX_BANK 3
-#define MAX_PROCESS 5
+#define MAX_PROCESS 6
 
 #define MSG_NULL 0
 #define MSG_DEBIT 1
@@ -94,8 +94,8 @@ proctype Transaction(byte current_p) {
             :: (msgtype == MSG_FINISHED) ->
                 Proc[msgfrom] ! MSG_RECEIVED(current_p, sender, msgdata);
                 complete[sender - MAX_BANK] = true; 
-                printf("Proc %d successfully send $%d to Proc %d\n", 
-                    sender, msgdata, current_p);
+                printf("Proc %d successfully send $%d to Proc %d, current balance of Proc %d is $%d\n", 
+                    sender, msgdata, current_p, current_p, customers[current_p - MAX_BANK].balance);
             fi;
 
             msgtype = MSG_NULL;
